@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee List</title>
+
+    <!-- Include FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="container">
+    <!-- Sidebar Menu -->
+    <div class="sidebar">
+
+        <div class="home-title">
+
+            <i class="material-icons">home</i>
+            <div>Home</div>
+
+        </div>
+
+        <ul>
+            <li><a href="{% url 'employee_list' %}">
+                <div class="home-title">
+
+                    <i class="material-icons">people</i>
+                    <div>Employees</div>
+                </div>
+            </a></li>
+            <li><a href="{% url 'add_employee' %}">
+                <div class="home-title">
+
+                    <i class="material-icons key">key</i>
+                    <div>Add Employee</div>
+                </div>
+            </a>
+
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Search Form -->
+        <div >
+            <form method="get" class="search-form">
+                <input type="text" name="search_name" value="{{ search_name_query }}" placeholder="Name"
+                       class="search-input">
+
+                <input type="text" name="search_email" value="{{ search_email_query }}" placeholder="Email"
+                       class="search-input">
+
+                <button type="submit" class="search-button">
+                    <i class="material-icons">search</i>
+                </button>
+            </form>
+        </div>
+
+
+        <!-- Employee Table -->
+        <table class="employee-table">
+            <thead>
+            <tr>
+                <th>Photo</th>
+                <th><a href="?sort=first_name&search={{ search_query }}">Full Name</a></th>
+                <th><a href="?sort=email&search={{ search_query }}">Email</a></th>
+                <th><a href="?sort=mobile&search={{ search_query }}">Mobile</a></th>
+                <th><a href="?sort=date_of_birth&search={{ search_query }}">Date of Birth</a></th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody id="employee-list">
+            {% for employee in page_obj %}
+                <tr id="employee-row-{{ employee.id }}">
+                    <td><img src="{{ employee.photo.url }}" alt="Photo"></td>
+                    <td>{{ employee.first_name }} {{ employee.last_name }}</td>
+                    <td>{{ employee.email }}</td>
+                    <td>{{ employee.mobile }}</td>
+                    <td>{{ employee.date_of_birth }}</td>
+                    <td>
+                        <!-- Edit and Delete Icons -->
+                        <a href="{% url 'edit_employee' employee.id %}" title="Edit"><i class="fas fa-edit"></i></a>
+                        <!-- Delete button with popup -->
+                        <a href="#" title="Delete" onclick="confirmDelete({{ employee.id }})"><i
+                                class="fas fa-trash-alt"></i></a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6">No employees found.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Pagination Controls -->
+        <div class="pagination">
+            <span>Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} out of {{ page_obj.paginator.count }}</span>
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}">&laquo;</a>
+            {% endif %}
+            {% for page_num in page_obj.paginator.page_range %}
+                {% if page_obj.number == page_num %}
+                    <strong>{{ page_num }}</strong>
+                {% else %}
+                    <a href="?page={{ page_num }}&search={{ search_query }}">{{ page_num }}</a>
+                {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}">&raquo;</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2>Confirm Delete</h2>
+        <p>Are you sure you want to delete this employee?</p>
+        <button class="confirm-button" onclick="deleteEmployee()">Delete</button>
+        <button class="cancel-button" onclick="closeModal()">Cancel</button>
+    </div>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+    <p>&copy; 2024 X Company. All rights reserved.</p>
+</div>
+
+<!-- Script for Modal Handling -->
+<script>
+    let employeeToDelete = null;
+
+    function confirmDelete(employeeId) {
+        employeeToDelete = employeeId;
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+    }
+
+    function deleteEmployee() {
+        const row = document.getElementById(`employee-row-${employeeToDelete}`);
+        if (row) {
+            row.remove();
+        }
+        closeModal();
+        // Make a request to your server to delete the employee via AJAX or form submission
+    }
+</script>
+
+</body>
+</html>
+

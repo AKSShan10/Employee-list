@@ -1,0 +1,251 @@
+<div class="container">
+    <!-- Sidebar Menu -->
+    <div class="sidebar">
+        <h2>Home</h2>
+        <ul>
+            <li><a href="{% url 'employee_list' %}">Employees</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="form-container">
+            <h2>Add New Employee</h2>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form.as_p }}
+
+                <!-- Image preview element -->
+                <img id="preview" class="image-preview" style="display: none;">
+
+                <!-- Dimensions display elements -->
+                <p id="original-dimensions" class="dimensions-text"></p>
+                <p id="resized-dimensions" class="dimensions-text"></p>
+
+                <!-- Add Employee Button -->
+                <button type="submit" id="add-employee-button" class="form-button">Add Employee</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+    <p>&copy; {{ current_year }} X Company. All rights reserved.</p>
+</footer>
+
+<!-- Include jQuery and jQuery UI libraries -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+
+<!-- Initialize Datepicker for the date_of_birth field -->
+<script>
+    $(function() {
+        $("#id_date_of_birth").datepicker({
+            dateFormat: 'yy-mm-dd',
+            changeMonth: true,
+            changeYear: true,
+            yearRange: "1900:2024",
+            maxDate: 0
+        });
+    });
+</script>
+
+<!-- JavaScript for image preview, dimension display, and resizing -->
+<script>
+    document.getElementById('id_photo').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const maxWidth = 300;
+                    const maxHeight = 300;
+                    let width = img.width;
+                    let height = img.height;
+
+                    // Calculate new dimensions to maintain aspect ratio
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height *= maxWidth / width;
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width *= maxHeight / height;
+                            height = maxHeight;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Display the resized image
+                    const resizedImage = canvas.toDataURL('image/jpeg');
+                    document.getElementById('preview').src = resizedImage;
+                    document.getElementById('preview').style.display = 'block';
+                    
+                    // Display the original and resized image dimensions
+                    document.getElementById('original-dimensions').textContent = `Original Dimensions: ${img.width}px x ${img.height}px`;
+                    document.getElementById('resized-dimensions').textContent = `Resized Dimensions: ${width}px x ${height}px`;
+
+                    // Show the Add Employee button after the image is displayed
+                    document.getElementById('add-employee-button').style.display = 'block';
+                };
+            };
+            reader.readAsDataURL(file);
+        } else {
+            // Hide the Add Employee button if no file is selected
+            document.getElementById('add-employee-button').style.display = 'block';
+            document.getElementById('preview').style.display = 'none'; // Hide preview if no file is selected
+            document.getElementById('original-dimensions').textContent = '';
+            document.getElementById('resized-dimensions').textContent = '';
+        }
+    });
+</script>
+
+<!-- Styles (Inline or External CSS) -->
+<style>
+    body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        margin: 0;
+        font-family: Arial, sans-serif;
+    }
+
+    .container {
+        display: flex;
+        flex: 1;
+        background-color: #f1f1f1; /* Match background color */
+    }
+
+    /* Sidebar Menu */
+    .sidebar {
+        width: 200px;
+        padding: 20px;
+        background-color: #f1f1f1; /* Match background color */
+        border-right: 1px solid #ccc;
+    }
+
+    .sidebar h2 {
+        margin-top: 0;
+    }
+
+    .sidebar ul {
+        list-style-type: none;
+        padding: 0;
+    }
+
+    .sidebar ul li {
+        margin: 10px 0;
+    }
+
+    .sidebar ul li a {
+        text-decoration: none;
+        color: #007bff;
+    }
+
+    /* Main Content */
+    .main-content {
+        flex: 1;
+        padding: 20px;
+        display: flex;
+        justify-content: center; /* Center horizontally */
+        align-items: center; /* Center vertically */
+        background-color: #fff; /* Match background color of form container */
+    }
+
+    .form-container {
+        width: 100%;
+        max-width: 600px;
+        padding: 20px;
+        background-color: #fff; /* Match background color of form container */
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-container h2 {
+        margin-top: 0;
+    }
+
+    .form-container form {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-row {
+        display: flex;
+        align-items: center;
+        margin: 10px 0;
+    }
+
+    .form-row label {
+        width: 150px; /* Fixed width for labels */
+        margin-right: 10px;
+        text-align: right; /* Align text to the right for consistent spacing */
+        font-weight: bold;
+    }
+
+    .form-row input,
+    .form-row select {
+        flex: 1;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box; /* Ensure padding is included in total width */
+    }
+
+    .image-preview {
+        max-width: 100%;
+        max-height: 300px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        margin-top: 20px;
+    }
+
+    .dimensions-text {
+        margin-top: 10px;
+        color: #555;
+        font-size: 0.9em;
+    }
+
+    .form-button {
+        padding: 10px;
+        border: none;
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+        border-radius: 4px;
+        margin-top: 20px;
+        align-self: center;
+    }
+
+    .form-button:hover {
+        background-color: #0056b3;
+    }
+
+    /* Footer Styles */
+    .footer {
+        text-align: center;
+        padding: 20px;
+        background-color: #f1f1f1; /* Match background color */
+        border-top: 1px solid #ccc;
+        margin-top: 20px;
+        position: sticky;
+        bottom: 0;
+        width: 100%;
+        color: black; /* Set font color to black */
+    }
+
+    .footer p {
+        margin: 0;
+    }
+</style>
